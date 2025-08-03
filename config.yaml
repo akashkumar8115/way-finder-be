@@ -1,0 +1,58 @@
+# FastAPI Configuration
+app_details:
+  title: digital-signage-be
+  version: 1.0.0
+  host_address: "0.0.0.0"
+  port: 8000
+
+# Database Configuration
+database_config:
+  postgresql:
+    host: localhost
+    port: 5432
+    username: admin
+    password: admin
+    database_name: digital-signage
+    DATABASE_URL: "postgresql://admin:admin@localhost:5432/digital-signage"
+
+# API Route details
+api_details:
+  api_path: ./src/api
+
+
+# API Replicate Directories details
+replicate_dir:
+  replicate_from: ./src/api
+  replicate_to: [./src/datamodel/data_validation/api, ./test/src/api]
+
+# Turn on or off Applications
+# app_required:
+#   active_app: [
+#     mongodb,
+#     postgresql,
+#     sqlite,
+#   ]
+#   inactive_app: [
+#     redis,
+#     rabbitmq,
+#     celery,
+#     elasticsearch,
+#     minio,
+#     kafka,
+#     cassandra,
+#     neo4j,
+#     clickhouse,
+#     mysql,
+#     mariadb,
+#     azure_blob,
+#     google_storage,
+#     aws_sqs,
+#     aws_sns,
+#     aws_s3,
+#     aws_dynamodb,
+#     aws_ssm,
+#     aws_secretsmanager,
+#     aws_kms,
+#     aws_cloudwatch,
+#     aws_cloudwatchlogs
+#     ]
