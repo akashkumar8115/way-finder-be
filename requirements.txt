@@ -168,3 +168,17 @@ backcall==0.2.0
 cffi==1.17.1
 comm==0.2.2
 b2sdk>=1.20.0
+
+# Additional dependencies added from project usage
+resend
+opencv-python
+asyncpg
+python-jose[cryptography]
+fastapi-sso
+permit
+beanie
+motor
+minio
+Pillow
+sqlalchemy-utils
+b2sdk
