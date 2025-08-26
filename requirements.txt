@@ -170,4 +170,4 @@ comm==0.2.2
 b2sdk>=1.20.0
 redis==6.4.0
 orjson>=3.10.7
-resend==0.10.0
+resend==2.13.0
