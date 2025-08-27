@@ -212,6 +212,57 @@ async def get_redis_stats() -> Dict[str, Any]:
         logger.error(f"Redis stats error: {e}")
         return {}
 
+async def update_cache_fast(key: str, value: Any, expire: Optional[int] = None) -> bool:
+    """Update cache only if the key exists"""
+    try:
+        exists = await redis_client.exists(key)
+        if not exists:
+            logger.warning(f"Update skipped, key not found: {key}")
+            return False
+
+        data = _ultra_fast_serialize(value)
+        # If expire is None, keep existing TTL
+        if expire is not None:
+            await redis_client.set(key, data, ex=expire)
+        else:
+            ttl = await redis_client.ttl(key)
+            await redis_client.set(key, data, ex=ttl if ttl > 0 else None)
+        return True
+    except Exception as e:
+        logger.error(f"Redis UPDATE error for {key}: {e}")
+        return False
+
+
+async def delete_cache_fast(key: str) -> bool:
+    """Delete a single cache key"""
+    try:
+        result = await redis_client.delete(key)
+        return result > 0
+    except Exception as e:
+        logger.error(f"Redis DELETE error for {key}: {e}")
+        return False
+
+
+async def delete_multi_cache(keys: list) -> int:
+    """Delete multiple keys at once"""
+    if not keys:
+        return 0
+    try:
+        result = await redis_client.delete(*keys)
+        return result  # number of keys deleted
+    except Exception as e:
+        logger.error(f"Redis MULTI-DELETE error: {e}")
+        return 0
+
+
+async def exists_cache(key: str) -> bool:
+    """Check if a key exists in cache"""
+    try:
+        return await redis_client.exists(key) > 0
+    except Exception as e:
+        logger.error(f"Redis EXISTS check failed for {key}: {e}")
+        return False
+    
 # Connection health check
 async def redis_health_check() -> bool:
     """Quick Redis health check"""
