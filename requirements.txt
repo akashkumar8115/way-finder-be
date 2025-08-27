@@ -107,7 +107,7 @@ permit==2.7.2
 
 # Video processing
 moviepy==2.1.2
-opencv-python==4.11.0.86
+# opencv-python==4.11.0.86
 
 # Data processing
 numpy==2.2.2
@@ -171,3 +171,5 @@ b2sdk>=1.20.0
 redis==6.4.0
 orjson>=3.10.7
 resend==2.13.0
+opencv-python
+
