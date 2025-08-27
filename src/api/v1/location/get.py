@@ -160,7 +160,7 @@ logger = logging.getLogger(__name__)
 # Ultra-fast in-memory cache for locations
 _LOCATION_MEMORY_CACHE: Dict[str, Dict] = {}
 _LOCATION_CACHE_ACCESS_ORDER = []
-MAX_LOCATION_MEMORY_CACHE = 200  # Larger cache for location queries
+MAX_LOCATION_MEMORY_CACHE = 200  # Larger cache for location queries 
 
 def add_to_location_memory_cache(key: str, data: Dict):
     """Ultra-fast in-memory cache for location data"""
