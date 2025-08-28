@@ -13,7 +13,7 @@ import struct
 logger = logging.getLogger(__name__)
 
 # Optimized Redis Configuration
-REDIS_URL = os.getenv("REDIS_URL", "redis://default:qPnMFGTQMkSPtXaRdgvpNWSxImrwPopX@centerbeam.proxy.rlwy.net:41705")
+REDIS_URL = os.getenv("REDIS_URL")
 
 # Ultra-optimized Redis client with minimal overhead
 redis_client = redis.from_url(
