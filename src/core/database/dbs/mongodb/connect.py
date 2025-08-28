@@ -2,7 +2,7 @@ import os
 from beanie import init_beanie
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.datamodel.database.domain.DigitalSignage import Location, Floor, Building, VerticalConnector, Path, Event
+from src.datamodel.database.domain.DigitalSignage import Location, Floor, Building, VerticalConnector, Path, Event ,EmergencyService,EmergencyAlert,EmergencyExit,NonEmergencyContact,EmergencyInstruction,Doctor,Department,HospitalService,DailyAnnouncement,HospitalInformation
 import logging
 # Load environment variables
 load_dotenv()
@@ -45,7 +45,7 @@ async def init_db():
 
         await init_beanie(
             database=client[MONGO_DATABASE_NAME],
-            document_models=[Location, Floor, Building, VerticalConnector, Path, Event],
+            document_models=[Location, Floor, Building, VerticalConnector, Path, Event, EmergencyService,EmergencyAlert,EmergencyExit,NonEmergencyContact,EmergencyInstruction,Doctor,Department,HospitalService,DailyAnnouncement,HospitalInformation],
         )
         logger.info("MongoDB initialized successfully")
     except Exception as err:
