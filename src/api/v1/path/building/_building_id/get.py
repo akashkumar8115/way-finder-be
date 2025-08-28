@@ -110,3 +110,4 @@ async def main(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve building paths: {str(e)}",
         )
+
