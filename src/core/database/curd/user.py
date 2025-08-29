@@ -96,7 +96,13 @@ async def add_user(db: AsyncSession, user: UserDetails) :
             entity_uuid = default_entity_uuid,
             role_id = user.role_id,
          )          
-         
+    if user_table.role_id==5:
+          user_org_role_map = UserEntityRoleMap(
+            user_uuid = user.user_uuid,
+            entity_uuid = user.entity_uuid,
+            role_id = user.role_id,
+         )      
+          
     db.add(user_org_role_map)
     await db.commit()
     await db.refresh(user_org_role_map)

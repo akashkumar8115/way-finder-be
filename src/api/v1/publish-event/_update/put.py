@@ -28,10 +28,10 @@ def api_config():
     config = {
         "path": "",
         "status_code": 200,
-        "tags": ["Organization"],
-        "summary": "Update Entity data",
+        "tags": ["event"],
+        "summary": "Update event data",
         "response_model": None,
-        "description": "This API endpoint updates an existing entity in the database.",
+        "description": "This API endpoint updates an existing event in the database.",
         "response_description": "Details of the updated entity.",
         "deprecated": False,
     }
@@ -99,7 +99,7 @@ def upload_image_to_b2(file_data: dict, base64_image: str) -> dict:
         "url": url
     }
 async def update_event_in_db(
-    event_id: str,
+    entity_uuid: str,
     name: Optional[str],
     start_date: Optional[str],
     end_date: Optional[str],
@@ -111,7 +111,7 @@ async def update_event_in_db(
 ):
     try:
         # Fetch the existing event
-        existing_event = await Event.find_one(Event.event_id == event_id)
+        existing_event = await Event.find_one(Event.event_id == entity_uuid)
         if not existing_event:
             raise HTTPException(status_code=404, detail="Event not found")
 
@@ -135,7 +135,7 @@ async def update_event_in_db(
 
         # Save updates
         await existing_event.save()
-        return {"message": "Event updated successfully", "event_id": event_id}
+        return {"message": "Event updated successfully", "event_id": entity_uuid}
 
     except HTTPException:
         raise
@@ -146,7 +146,7 @@ async def update_event_in_db(
 
 
 async def main( request: Request,
-    event_id: str,
+    entity_uuid: str,
     name: Optional[str] = Form(None),
     start_date: Optional[str] = Form(None),
     end_date: Optional[str] = Form(None),
@@ -168,7 +168,7 @@ async def main( request: Request,
         image_base64 = upload_image_to_b2(image_file, base64_image)
 
     return await update_event_in_db(
-        event_id=event_id,
+        entity_uuid=entity_uuid,
         name=name,
         start_date=start_date,
         end_date=end_date,

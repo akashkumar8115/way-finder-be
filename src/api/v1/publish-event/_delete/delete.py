@@ -35,19 +35,19 @@ def api_config():
     }
     return ApiConfig(**config)
 
-async def delete_event_in_db(event_id: str):
+async def delete_event_in_db(id: str):
     try:
-        event = await Event.find_one(Event.event_id == event_id)
+        event = await Event.find_one(Event.event_id == id)
         if not event:
             raise HTTPException(status_code=404, detail="Event not found")
 
         await event.delete()
 
-        return {"message": "Event deleted successfully", "event_id": event_id}
+        return {"message": "Event deleted successfully", "event_id": id}
     except Exception as e:
-        logger.error(f"Error deleting event {event_id}: {str(e)}")
+        logger.error(f"Error deleting event {id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
 
-async def main(event_id: str, db: AsyncSession = Depends(db)):
+async def main(id: str, db: AsyncSession = Depends(db)):
     
-    return await delete_event_in_db(event_id)
+    return await delete_event_in_db(id)

@@ -2,7 +2,7 @@ import os
 from beanie import init_beanie
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.datamodel.database.domain.DigitalSignage import Location, Floor, Building, VerticalConnector, Path, Event
+from src.datamodel.database.domain.DigitalSignage import Location, Floor, Building, VerticalConnector, Path, Event ,EmergencyService,EmergencyAlert,EmergencyExit,NonEmergencyContact,EmergencyInstruction,Doctor,Department,HospitalService,DailyAnnouncement,HospitalInformation
 import logging
 # Load environment variables
 load_dotenv()
@@ -13,7 +13,9 @@ logging.basicConfig(level=logging.INFO)
 # MongoDB connection details
 MONGO_DATABASE_URL = os.getenv("MONGO_DATABASE_URL")
 # MONGO_DATABASE_NAME = os.getenv("MONGO_DATABASE_NAME", "digital-signage")
-MONGO_DATABASE_NAME = os.getenv("MONGO_DATABASE_NAME", "wayfinder-db")
+# MONGO_DATABASE_NAME = os.getenv("MONGO_DATABASE_NAME", "wayfinder-db")
+MONGO_DATABASE_NAME = os.getenv("MONGO_DATABASE_NAME", "wayfinder-test-db")
+
 
 
 async def check_db_connection():
@@ -45,7 +47,7 @@ async def init_db():
 
         await init_beanie(
             database=client[MONGO_DATABASE_NAME],
-            document_models=[Location, Floor, Building, VerticalConnector, Path, Event],
+            document_models=[Location, Floor, Building, VerticalConnector, Path, Event, EmergencyService,EmergencyAlert,EmergencyExit,NonEmergencyContact,EmergencyInstruction,Doctor,Department,HospitalService,DailyAnnouncement,HospitalInformation],
         )
         logger.info("MongoDB initialized successfully")
     except Exception as err:

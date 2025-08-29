@@ -43,16 +43,15 @@ async def get_all_entities(db: AsyncSession):
 
     return [entity_uuid[0] for entity_uuid in entity_uuids]
 
-
 async def get_all_entities_with_roles(db: AsyncSession, current_user: User):
     """
-    Fetch all entities where the user is a Super Admin, along with categorized Admins & Maintainers.
+    Fetch all entities with categorized users: Super Admins, Admins, Maintainers, and Kiosk Admins.
     """
     try:
         all_entities = await get_all_entities(db)
 
         if not all_entities:
-            return {"message": "User is not a Super Admin of any entity"}
+            return {"message": "User is not assigned to any entity"}
 
         entity_list = []
         for entity_uuid in all_entities:
@@ -66,43 +65,49 @@ async def get_all_entities_with_roles(db: AsyncSession, current_user: User):
 
             # Fetch users with roles for this entity
             user_roles_query = (
-                select(UserEntityRoleMap, User, Role)
-                .join(User, User.user_uuid == UserEntityRoleMap.user_uuid)
-                .join(Role, Role.role_id == UserEntityRoleMap.role_id)
-                .where(
-                    UserEntityRoleMap.entity_uuid == entity_uuid,
-                    UserEntityRoleMap.role_id.in_([1, 2, 3])  # Admin & Maintainer
-                )
-            )
+    select(UserEntityRoleMap, User, Role)
+    .join(User, User.user_uuid == UserEntityRoleMap.user_uuid, isouter=True)
+    .join(Role, Role.role_id == UserEntityRoleMap.role_id, isouter=True)
+    .where(
+        UserEntityRoleMap.entity_uuid == entity_uuid,
+        UserEntityRoleMap.role_id.in_([1, 2, 3, 5])
+    )
+)
             user_roles_result = await db.execute(user_roles_query)
             user_roles = user_roles_result.all()
             
-            superadmin_user = []
+            # Initialize role categories
+            superadmin_users = []
             admin_users = []
             maintainer_users = []
+            kioskadmin_users = []
 
             for mapping, user, role in user_roles:
                 user_data = {
-                    "user_uuid": user.user_uuid,
-                    "name": user.first_name + " " + user.last_name,
+                    "user_uuid": str(user.user_uuid),
+                    "name": f"{user.first_name} {user.last_name}",
                     "username": user.username,
                     "email": user.email,
-                    "role_name": role.role_name  # Ensure correct role name is returned
+                    "role_id": role.role_id,
+                    "role_name": role.role_name,
                 }
 
-                if role.role_id == 2:
+                if role.role_id == 1:
+                    superadmin_users.append(user_data)
+                elif role.role_id == 2:
                     admin_users.append(user_data)
+                elif role.role_id == 5:
+                    kioskadmin_users.append(user_data)    
                 elif role.role_id == 3:
                     maintainer_users.append(user_data)
-                elif role.role_id == 1:
-                    superadmin_user.append(user_data)
                     
             entity_list.append({
-                "entity_uuid": entity.entity_uuid,
+                "entity_uuid": str(entity.entity_uuid),
                 "entity_name": entity.name,
+                "superadmin_users": superadmin_users,
                 "admin_users": admin_users,
                 "maintainer_users": maintainer_users,
-                "superadmin_user": superadmin_user
+                "kioskadmin_users": kioskadmin_users
             })
 
         return {"entities": entity_list}
@@ -112,7 +117,6 @@ async def get_all_entities_with_roles(db: AsyncSession, current_user: User):
     except Exception as e:
         logger.error(f"Error fetching entities with roles: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
 
 async def main(request: Request, db: AsyncSession = Depends(db)):
     """
