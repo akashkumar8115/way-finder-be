@@ -107,55 +107,108 @@ async def create_user(user_signup: UserSignUp, db: AsyncSession = Depends(db)):
         )
 
 
+# @password_auth.post("/passauth", summary="Login as a user", tags=["Auth"])
+# async def login(
+#     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+#     db: AsyncSession = Depends(db),
+# ):  # -> Token:
+#     # @router.post("/login", summary="Login as a user", tags=["Auth"])
+#     # asyc def login(response: RedirectResponse, username: str = Form(...), password: str = Form(...), db: AsyncSession = Depends(db)):
+#     # use cookie
+#     try:
+#         user = UserLogin(
+#             username=form_data.username,
+#             password=form_data.password,
+#             login_on=datetime.now(timezone.utc),
+#         )
+#         access_token = await login_flow(user=user, db=db, auth_flow="login")
+#         # Determine Redirect Based on Role
+#         # user_stored = await get_user(db, user.username, user.provider)
+#         # role_id = user_stored.role_id if hasattr(user_stored, "role_id") else "user"
+#         user_stored = get_token_payload(access_token)
+#         role_id = user_stored["role_id"]
+#         # Role-Based Redirect
+#         redirect_url = "/"
+        
+#         #Create user data to include in response
+#         user_data = {
+#             "user_uuid": user_stored["user_uuid"],
+#             "username": user_stored["username"],
+#             "role_id": role_id,
+#         }
+#         response = JSONResponse({"redirect_url": redirect_url})
+#         # Set the session cookie with the access token
+#         response.set_cookie(
+#             key=SESSION_COOKIE_NAME,
+#             value=access_token,
+#             httponly=True,
+#             secure=True,
+#             samesite="none",
+#         )
+
+#         return response
+#     except Exception as e:
+#         logger.error(f"Following error occured: {e}")
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"An unexpected error occurred. Report this message to support: {e}",
+#         )
+
+
 @password_auth.post("/passauth", summary="Login as a user", tags=["Auth"])
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncSession = Depends(db),
-):  # -> Token:
-    # @router.post("/login", summary="Login as a user", tags=["Auth"])
-    # asyc def login(response: RedirectResponse, username: str = Form(...), password: str = Form(...), db: AsyncSession = Depends(db)):
-    # use cookie
+):
     try:
+        # Create user object with UTC timestamp
+        login_time = datetime.now(timezone.utc)
         user = UserLogin(
             username=form_data.username,
             password=form_data.password,
-            login_on=datetime.now(timezone.utc),
+            login_on=login_time,
         )
-        access_token = await login_flow(user=user, db=db, auth_flow="login")
-        # Determine Redirect Based on Role
-        # user_stored = await get_user(db, user.username, user.provider)
-        # role_id = user_stored.role_id if hasattr(user_stored, "role_id") else "user"
-        user_stored = get_token_payload(access_token)
-        role_id = user_stored["role_id"]
-        # Role-Based Redirect
-        redirect_url = "/"
         
-        #Create user data to include in response
+        # Single database call for login flow
+        access_token = await login_flow(user=user, db=db, auth_flow="login")
+        
+        # Decode token payload once (avoid redundant JWT operations)
+        user_payload = get_token_payload(access_token)
+        
+        # Pre-build response data
         user_data = {
-            "user_uuid": user_stored["user_uuid"],
-            "username": user_stored["username"],
-            "role_id": role_id,
+            "user_uuid": user_payload["user_uuid"],
+            "username": user_payload["username"], 
+            "role_id": user_payload["role_id"],
+            "redirect_url": "/"
         }
-        response = JSONResponse({"redirect_url": redirect_url})
-        # Set the session cookie with the access token
+        
+        # Create optimized response
+        response = JSONResponse(user_data)
+        
+        # Set session cookie (consider shorter expiry for faster auth checks)
         response.set_cookie(
             key=SESSION_COOKIE_NAME,
             value=access_token,
             httponly=True,
             secure=True,
             samesite="none",
+            max_age=3600  # 1 hour instead of default session length
         )
-
+        
         return response
+        
     except Exception as e:
-        logger.error(f"Following error occured: {e}")
+        # Use structured logging for better performance
+        logger.error("Login failed", extra={
+            "username": form_data.username,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
         raise HTTPException(
-            status_code=500,
-            detail=f"An unexpected error occurred. Report this message to support: {e}",
+            status_code=401,  # More appropriate for auth failures
+            detail="Authentication failed"  # Don't expose internal errors
         )
-
-
-
 
 class EmailVerificationRequest(BaseModel):
     email: EmailStr

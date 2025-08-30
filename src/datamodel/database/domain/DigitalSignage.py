@@ -1,9 +1,12 @@
 from beanie import Document, Indexed
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel,EmailStr
 from typing import Optional, Dict, List, Any
 from enum import Enum
 import time
 import uuid
+from uuid import UUID
+from datetime import datetime
+from datetime import date
 
 # -----------------------------
 # Enums
@@ -275,6 +278,152 @@ class Path(Document):
             "is_published"                           # publishing filters
         ]
 
+    def recompute_denorm(self) -> None:
+        # Floors seen across all segments
+        fset = {seg.floor_id for seg in (self.floor_segments or [])}
+        self.floors = sorted(fset)
+        self.is_multifloor = len(self.floors) > 1
+
+        # Collect shared_ids from vertical connectors used in points
+        shared_ids = []
+        for seg in self.floor_segments or []:
+            for p in seg.points or []:
+                if p.kind == NodeKind.VERTICAL_CONNECTOR and p.shared_id:
+                    shared_ids.append(p.shared_id)
+        self.connector_shared_ids = sorted(set(shared_ids))    
+
+
+class EmergencyService(Document):
+    emergency_service_uuid: UUID   # <--- Use UUID not str
+    title: str
+    description: Optional[str] = None
+    phone_number: str
+    location: Optional[str] = None
+    availability: Optional[str] = None
+    priority_level: int = Field(default=1, ge=1, le=5)  # restrict between 1-5
+
+    class Settings:
+        name = "emergency_services"  
+
+class EmergencyAlert(Document):
+    alert_id: UUID  # unique identifier
+    title: str
+    message: str
+    alert_type: str
+    is_active: bool = Field(default=True)
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+    class Settings:
+        name = "emergency_alerts"  # MongoDB collection name
+
+
+class EmergencyExit(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str
+    description: Optional[str] = None
+    direction_instructions: Optional[str] = None
+    distance_meters: Optional[int] = None
+    estimated_time_minutes: Optional[int] = None
+    is_primary_exit: bool = False
+    floor_location: Optional[str] = None
+    is_active: bool = True
+    display_order: int = 0
+
+    class Settings:
+        name = "emergency_exits" 
+         # MongoDB collection name
+
+
+class NonEmergencyContact(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str
+    description: Optional[str] = None
+    phone_number: Optional[str] = None
+    department: Optional[str] = None
+    is_active: bool = True
+    display_order: int = 0
+    icon_name: str = "phone"
+
+    class Settings:
+        name = "non_emergency_contacts" 
+         # Collection name
+
+class EmergencyInstruction(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    instruction_type: str = Field(..., description="Type of instruction (e.g., life_threatening)")
+    title: str = Field(..., description="Instruction title")
+    content: str = Field(..., description="Instruction content/details")
+    priority_level: int = Field(1, description="Priority order (1 = highest)")
+    is_active: bool = Field(True, description="Whether the instruction is active")
+    class Settings:
+        name = "emergency_instructions"  # MongoDB collection name
+
+class Doctor(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str = Field(..., description="Full name of the doctor")
+    specialty: str = Field(..., description="Doctor's specialty")
+    department: str = Field(..., description="Associated department")
+    phone_number: str = Field(..., description="Phone number")
+    email: EmailStr = Field(..., description="Doctor's email")
+    office_location: str = Field(..., description="Office location")
+    availability_hours: str = Field(..., description="Availability schedule")
+    bio: Optional[str] = Field(None, description="Short biography")
+
+    class Settings:
+        name = "doctors"  
+
+
+class Department(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str = Field(..., description="Department name")
+    description: Optional[str] = Field(None, description="Department description")
+    location: Optional[str] = Field(None, description="Department location in hospital")
+    phone_number: str = Field(..., description="Contact number")
+    hours: str = Field(..., description="Operating hours")
+    services: List[str] = Field(default_factory=list, description="List of services offered")
+
+    class Settings:
+        name = "departments"  # MongoDB collection name
+
+class HospitalService(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str = Field(..., description="Name of the service")
+    description: Optional[str] = Field(None, description="Description of the service")
+    category: str = Field(..., description="Service category (e.g., Diagnostic, Surgical)")
+    location: str = Field(..., description="Where the service is provided")
+    phone_number: str = Field(..., description="Contact phone number")
+    hours: str = Field(..., description="Operating hours")
+    requirements: Optional[str] = Field(None, description="Special requirements to access the service")
+
+    class Settings:
+        name = "hospital_services" 
+
+class DailyAnnouncement(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    title: str = Field(..., description="Title of the announcement")
+    content: str = Field(..., description="Content/details of the announcement")
+    priority_level: int = Field(..., ge=1, le=4, description="Priority (1=Critical, 4=Low)")
+    active: bool = Field(default=True, description="Is the announcement active?")
+    display_date: date = Field(..., description="Date when announcement should be displayed")
+
+    class Settings:
+        name = "daily_announcements"  # MongoDB collection name
+         # MongoDB collection name
+
+class HospitalInformation(Document):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    category_id: str = Field(..., description="Category identifier (e.g., visiting, policies, services)")
+    category_title: str = Field(..., description="Readable category title")
+    item_title: str = Field(..., description="Title of the information item")
+    item_content: str = Field(..., description="Content (text, list, hours, contact, etc.)")
+    item_type: str = Field(..., description="Type of content: text, list, hours, contact")
+    is_important: bool = Field(default=False, description="Whether the item should be highlighted as important")
+    display_order: int = Field(default=0, description="Order of display")
+
+    class Settings:
+        name = "hospital_information"  # MongoDB collection name
+
     # Utility: call this before save/update to keep denormalized fields consistent.
     def recompute_denorm(self) -> None:
         # Floors seen across all segments
@@ -289,3 +438,4 @@ class Path(Document):
                 if p.kind == NodeKind.VERTICAL_CONNECTOR and p.shared_id:
                     shared_ids.append(p.shared_id)
         self.connector_shared_ids = sorted(set(shared_ids))
+
