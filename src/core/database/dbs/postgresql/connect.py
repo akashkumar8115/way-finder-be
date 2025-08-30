@@ -36,6 +36,7 @@ from dotenv import load_dotenv
 import os
 from asyncpg import Connection
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from typing import AsyncGenerator
 
 
 load_dotenv("./.env.local")
@@ -71,6 +72,6 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # 4. Updated async database dependency
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session

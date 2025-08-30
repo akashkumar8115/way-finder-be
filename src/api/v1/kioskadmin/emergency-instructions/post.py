@@ -44,18 +44,20 @@ async def main(
     validate_token_start = time.time()
     validate_token(request)
     validate_token_time = time.time() - validate_token_start
+    entity_uuid = request.state.entity_uuid
     logger.info(f"PERFORMANCE: Token validation took {validate_token_time:.4f} seconds")
 
     try:
         exist_id = str(uuid.uuid4())
-        # 3) Create EmergencyExit object
         new_exit = EmergencyInstruction(
             id =exist_id,
+            entity_uuid=entity_uuid,
             instruction_type=payload.instruction_type,
             title=payload.title,
             content=payload.content,
             priority_level=payload.priority_level,
             is_active=payload.is_active
+          
         )
         await new_exit.insert()
 
@@ -71,7 +73,8 @@ async def main(
                 "title": new_exit.title,
                 "priority_level": new_exit.priority_level,
                 "content": new_exit.content,
-                "is_active": new_exit.is_active
+                "is_active": new_exit.is_active,
+                "entity_uuid":new_exit.entity_uuid
             }
         }
 
