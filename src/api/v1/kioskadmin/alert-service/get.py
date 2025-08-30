@@ -41,7 +41,16 @@ async def main(
 
     try:
 
-        emregency_service: List[EmergencyAlert] = await EmergencyAlert.find({}).to_list()
+        emregency_service: List[EmergencyAlert] = (
+            await EmergencyAlert.find({"entity_uuid": entity_uuid}).to_list()
+        )
+
+        
+        if not emregency_service:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No EmergencyAlert found for entity_uuid: {entity_uuid}"
+            ) 
 
         # Convert to JSON-serializable format
         emregency_alert_list = []

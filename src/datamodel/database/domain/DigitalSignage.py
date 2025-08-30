@@ -287,6 +287,7 @@ class EmergencyService(Document):
     location: Optional[str] = None
     availability: Optional[str] = None
     priority_level: int = Field(default=1, ge=1, le=5)  # restrict between 1-5
+    entity_uuid:str
 
     class Settings:
         name = "emergency_services"  
@@ -299,7 +300,7 @@ class EmergencyAlert(Document):
     is_active: bool = Field(default=True)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-
+    entity_uuid:str
     class Settings:
         name = "emergency_alerts"  # MongoDB collection name
 
@@ -315,7 +316,7 @@ class EmergencyExit(Document):
     floor_location: Optional[str] = None
     is_active: bool = True
     display_order: int = 0
-
+    entity_uuid:str
     class Settings:
         name = "emergency_exits" 
          # MongoDB collection name
@@ -330,7 +331,7 @@ class NonEmergencyContact(Document):
     is_active: bool = True
     display_order: int = 0
     icon_name: str = "phone"
-
+    entity_uuid:str
     class Settings:
         name = "non_emergency_contacts" 
          # Collection name
@@ -342,6 +343,8 @@ class EmergencyInstruction(Document):
     content: str = Field(..., description="Instruction content/details")
     priority_level: int = Field(1, description="Priority order (1 = highest)")
     is_active: bool = Field(True, description="Whether the instruction is active")
+    entity_uuid:str
+    
     class Settings:
         name = "emergency_instructions"  # MongoDB collection name
 
@@ -355,7 +358,7 @@ class Doctor(Document):
     office_location: str = Field(..., description="Office location")
     availability_hours: str = Field(..., description="Availability schedule")
     bio: Optional[str] = Field(None, description="Short biography")
-
+    entity_uuid:str
     class Settings:
         name = "doctors"  
 
@@ -368,7 +371,7 @@ class Department(Document):
     phone_number: str = Field(..., description="Contact number")
     hours: str = Field(..., description="Operating hours")
     services: List[str] = Field(default_factory=list, description="List of services offered")
-
+    entity_uuid:str
     class Settings:
         name = "departments"  # MongoDB collection name
 
@@ -381,7 +384,7 @@ class HospitalService(Document):
     phone_number: str = Field(..., description="Contact phone number")
     hours: str = Field(..., description="Operating hours")
     requirements: Optional[str] = Field(None, description="Special requirements to access the service")
-
+    entity_uuid:str
     class Settings:
         name = "hospital_services" 
 
@@ -392,7 +395,7 @@ class DailyAnnouncement(Document):
     priority_level: int = Field(..., ge=1, le=4, description="Priority (1=Critical, 4=Low)")
     active: bool = Field(default=True, description="Is the announcement active?")
     display_date: date = Field(..., description="Date when announcement should be displayed")
-
+    entity_uuid:str
     class Settings:
         name = "daily_announcements"  # MongoDB collection name
          # MongoDB collection name
@@ -406,7 +409,7 @@ class HospitalInformation(Document):
     item_type: str = Field(..., description="Type of content: text, list, hours, contact")
     is_important: bool = Field(default=False, description="Whether the item should be highlighted as important")
     display_order: int = Field(default=0, description="Order of display")
-
+    entity_uuid:str
     class Settings:
         name = "hospital_information"  # MongoDB collection name
 
