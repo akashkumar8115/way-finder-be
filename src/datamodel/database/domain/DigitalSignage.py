@@ -278,6 +278,20 @@ class Path(Document):
             "is_published"                           # publishing filters
         ]
 
+    def recompute_denorm(self) -> None:
+        # Floors seen across all segments
+        fset = {seg.floor_id for seg in (self.floor_segments or [])}
+        self.floors = sorted(fset)
+        self.is_multifloor = len(self.floors) > 1
+
+        # Collect shared_ids from vertical connectors used in points
+        shared_ids = []
+        for seg in self.floor_segments or []:
+            for p in seg.points or []:
+                if p.kind == NodeKind.VERTICAL_CONNECTOR and p.shared_id:
+                    shared_ids.append(p.shared_id)
+        self.connector_shared_ids = sorted(set(shared_ids))    
+
 
 class EmergencyService(Document):
     emergency_service_uuid: UUID   # <--- Use UUID not str
@@ -424,3 +438,4 @@ class HospitalInformation(Document):
                 if p.kind == NodeKind.VERTICAL_CONNECTOR and p.shared_id:
                     shared_ids.append(p.shared_id)
         self.connector_shared_ids = sorted(set(shared_ids))
+
