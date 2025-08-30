@@ -67,7 +67,7 @@ async def main(
             phone_number=phone_number,
             location=location,
             availability=availability,
-            priority_level=priority_level,
+            priority_level=priority_level
         )
 
         # 3) Duplicate checks
@@ -103,6 +103,7 @@ async def main(
             location=service_data.location,
             availability=service_data.availability,
             priority_level=service_data.priority_level,
+            entity_uuid=entity_uuid
         )
         await new_service.insert()
 
@@ -120,6 +121,7 @@ async def main(
                 "location": new_service.location,
                 "availability": new_service.availability,
                 "priority_level": new_service.priority_level,
+                "entity_uuid":new_service.entity_uuid
             }
         }
 
