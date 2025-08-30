@@ -45,6 +45,7 @@ async def main(
     # 1) Validate token
     validate_token_start = time.time()
     validate_token(request)
+    entity_uuid=request.state.entity_uuid
     validate_token_time = time.time() - validate_token_start
     logger.info(f"PERFORMANCE: Token validation took {validate_token_time:.4f} seconds")
 
@@ -68,7 +69,8 @@ async def main(
             department=payload.department,
             is_active=payload.is_active,
             display_order=payload.display_order,
-            icon_name=payload.icon_name
+            icon_name=payload.icon_name,
+            entity_uuid=entity_uuid
             
         )
         await new_exit.insert()
